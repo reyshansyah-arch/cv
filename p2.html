@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam - Kecerahan</title>
+
+    <style>
+        video, canvas {
+            width: 400px;
+            max-width: 100%;
+            display: block;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        #hasil {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>Deteksi Kecerahan Webcam</h2>
+
+    <!-- Webcam -->
+    <video id="cam" autoplay playsinline></video>
+
+    <!-- Canvas untuk menyimpan frame -->
+    <canvas id="frame"></canvas>
+
+    <button onclick="mulaiKamera()">Mulai Kamera</button>
+    <button onclick="prosesFrame()">Ambil Frame</button>
+
+    <div id="hasil">
+        Kecerahan: -
+    </div>
+
+    <script>
+        let video;
+
+        // Menyalakan kamera
+        async function mulaiKamera() {
+            try {
+                video = document.getElementById('cam');
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true
+                });
+
+                video.srcObject = stream;
+                await video.play();
+
+                console.log("Kamera berhasil dinyalakan");
+
+            } catch (error) {
+                console.error("Gagal mengakses kamera:", error);
+                alert("Kamera tidak dapat diakses. Pastikan web dijalankan di localhost/HTTPS dan izin diberikan.");
+            }
+        }
+
+        // Mengambil frame dari video
+        function ambilFrame(video, canvas) {
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            return ctx.getImageData(0, 0, canvas.width, canvas.height);
+        }
+
+        // Menghitung rata-rata kecerahan
+        function rataKecerahan(imageData) {
+            const d = imageData.data;
+            let total = 0;
+
+            // Data RGBA → setiap pixel terdiri dari 4 nilai
+            for (let i = 0; i < d.length; i += 4) {
+                const merah = d[i];
+                const hijau = d[i + 1];
+                const biru = d[i + 2];
+
+                // Rumus Luminance yang lebih akurat untuk persepsi mata manusia
+                const brightness = (0.299 * merah) + (0.587 * hijau) + (0.114 * biru);
+                
+                total += brightness;
+            }
+
+            // Jumlah pixel
+            const jumlahPixel = d.length / 4;
+
+            return total / jumlahPixel;
+        }
+
+        // Proses frame dan tampilkan kecerahan
+        function prosesFrame() {
+            if (!video || video.videoWidth === 0) {
+                alert("Silakan nyalakan kamera terlebih dahulu (tunggu hingga gambar muncul).");
+                return;
+            }
+
+            const canvas = document.getElementById('frame');
+
+            // Ambil gambar dari webcam
+            const imageData = ambilFrame(video, canvas);
+
+            // Hitung kecerahan
+            const brightness = rataKecerahan(imageData);
+
+            // Tampilkan hasil
+            document.getElementById('hasil').innerText = "Kecerahan: " + brightness.toFixed(2) + " / 255";
+        }
+    </script>
+
+</body>
+</html>
