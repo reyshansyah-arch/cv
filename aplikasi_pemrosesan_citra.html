@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Pemrosesan Citra Sederhana</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .checkerboard {
+            background-image: linear-gradient(45deg, #e5e7eb 25%, transparent 25%), 
+                              linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #e5e7eb 75%), 
+                              linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <header class="bg-indigo-600 text-white shadow-md py-4 px-6 flex justify-between items-center">
+        <h1 class="text-xl font-bold flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            PhotoFilter Pro
+        </h1>
+        <span class="text-xs bg-indigo-500 py-1 px-3 rounded-full font-medium">HTML5 Canvas App</span>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Sidebar Controls -->
+        <aside class="lg:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-5 h-fit">
+            <h2 class="font-semibold text-lg text-slate-700 border-b pb-2">Panel Kontrol</h2>
+
+            <!-- Upload Section -->
+            <div class="flex flex-col gap-2">
+                <label class="block text-sm font-medium text-slate-600">Sumber Gambar</label>
+                <div class="flex gap-2">
+                    <label class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 px-3 rounded-xl text-xs font-semibold text-center cursor-pointer transition flex items-center justify-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Unggah File
+                        <input type="file" id="imageLoader" accept="image/*" class="hidden"/>
+                    </label>
+                    <button onclick="toggleCamera()" id="cameraBtn" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-semibold text-center transition flex items-center justify-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Buka Kamera
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="flex flex-col gap-2">
+                <label class="block text-sm font-medium text-slate-600">Filter Utama</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="applyFilter('normal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Normal</button>
+                    <button onclick="applyFilter('grayscale')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Grayscale</button>
+                    <button onclick="applyFilter('bw')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Black & White</button>
+                    <button onclick="applyFilter('invert')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Invert</button>
+                    <button onclick="applyFilter('sepia')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Sepia</button>
+                    <button onclick="applyFilter('blur')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Blur</button>
+                    <button onclick="applyFilter('threshold')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Threshold</button>
+                    <button onclick="applyFilter('bokeh')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Bokeh</button>
+                </div>
+            </div>
+
+            <!-- Geometric Transformations Section -->
+            <div class="flex flex-col gap-2 border-t pt-4">
+                <label class="block text-sm font-medium text-slate-600">Transformasi Geometri</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="transformImage('rotate90')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Putar 90°</button>
+                    <button onclick="transformImage('rotate180')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Putar 180°</button>
+                    <button onclick="transformImage('flipH')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Flip Horizontal</button>
+                    <button onclick="transformImage('flipV')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-3 rounded-xl text-xs font-medium transition">Flip Vertikal</button>
+                </div>
+                <div class="mt-2">
+                    <div class="flex justify-between text-xs text-slate-500 mb-1">
+                        <span>Skala Ukuran (Resize)</span>
+                        <span id="scaleVal">100%</span>
+                    </div>
+                    <input type="range" id="scaleRange" min="20" max="200" value="100" class="w-full accent-indigo-600">
+                </div>
+            </div>
+
+            <!-- Adjustments Section -->
+            <div class="flex flex-col gap-4 border-t pt-4">
+                <label class="block text-sm font-medium text-slate-600">Pengaturan Manual</label>
+                
+                <div>
+                    <div class="flex justify-between text-xs text-slate-500 mb-1">
+                        <span>Kecerahan (Brightness)</span>
+                        <span id="brightnessVal">0</span>
+                    </div>
+                    <input type="range" id="brightnessRange" min="-100" max="100" value="0" class="w-full accent-indigo-600">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs text-slate-500 mb-1">
+                        <span>Kontras (Contrast)</span>
+                        <span id="contrastVal">0</span>
+                    </div>
+                    <input type="range" id="contrastRange" min="-100" max="100" value="0" class="w-full accent-indigo-600">
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs text-slate-500 mb-1">
+                        <span>Batas Threshold</span>
+                        <span id="thresholdVal">128</span>
+                    </div>
+                    <input type="range" id="thresholdRange" min="0" max="255" value="128" class="w-full accent-indigo-600">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col gap-2 border-t pt-4">
+                <button onclick="resetImage()" class="w-full bg-amber-50 hover:bg-amber-100 text-amber-700 py-2.5 px-4 rounded-xl font-medium text-sm transition">Reset Perubahan</button>
+                <a id="downloadBtn" download="hasil-citra.png" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 px-4 rounded-xl font-medium text-sm text-center transition shadow-sm">Unduh Gambar</a>
+            </div>
+        </aside>
+
+        <!-- Workspace Comparison View -->
+        <section class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center justify-center relative min-h-[450px]">
+            <div id="placeholder" class="text-center text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p class="text-sm font-medium">Belum ada gambar yang dimuat.</p>
+                <p class="text-xs text-slate-400 mt-1">Gunakan panel kontrol di samping untuk mengunggah atau mengambil foto.</p>
+            </div>
+
+            <!-- Camera View in Center Workspace -->
+            <div id="cameraContainer" class="w-full hidden flex flex-col items-center gap-4">
+                <div class="relative bg-slate-900 rounded-xl overflow-hidden max-w-xl w-full aspect-video flex items-center justify-center border border-slate-300 shadow-inner">
+                    <video id="cameraStream" autoplay playsinline class="w-full h-full object-cover"></video>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="capturePhoto()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-xl text-sm transition shadow-md flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Ambil Foto Sekarang
+                    </button>
+                    <button onclick="closeCamera()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 px-4 rounded-xl text-sm transition">
+                        Batal
+                    </button>
+                </div>
+            </div>
+            
+            <div id="workspaceContainer" class="w-full hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Original Image View -->
+                <div class="flex flex-col items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider bg-slate-100 px-3 py-1 rounded-full">Gambar Asli</span>
+                    <div class="checkerboard rounded-xl overflow-hidden max-w-full max-h-[500px] flex items-center justify-center p-2 border border-slate-200">
+                        <canvas id="originalCanvas" class="max-w-full h-auto object-contain"></canvas>
+                    </div>
+                </div>
+                <!-- Filtered Result View -->
+                <div class="flex flex-col items-center gap-2">
+                    <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-full">Hasil Filter & Transformasi</span>
+                    <div class="checkerboard rounded-xl overflow-hidden max-w-full max-h-[500px] flex items-center justify-center p-2 border border-indigo-100">
+                        <canvas id="imageCanvas" class="max-w-full h-auto object-contain"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const imageLoader = document.getElementById('imageLoader');
+        const canvas = document.getElementById('imageCanvas');
+        const ctx = canvas.getContext('2d');
+        const originalCanvas = document.getElementById('originalCanvas');
+        const origCtx = originalCanvas.getContext('2d');
+        
+        const placeholder = document.getElementById('placeholder');
+        const workspaceContainer = document.getElementById('workspaceContainer');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const cameraStream = document.getElementById('cameraStream');
+        const cameraBtn = document.getElementById('cameraBtn');
+        let mediaStream = null;
+
+        let baseImage = null; // Stores raw loaded base image
+        let originalImage = null; // Stores transformed base image before filter
+        let currentFilter = 'normal';
+        let currentTransform = {
+            rotation: 0, // 0, 90, 180, 270
+            flipH: false,
+            flipV: false,
+            scale: 1.0
+        };
+
+        // Load image into memory from file
+        imageLoader.addEventListener('change', function(e) {
+            closeCamera();
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    initImage(img);
+                }
+                img.src = event.target.result;
+            }
+            if(e.target.files[0]) {
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        function initImage(img) {
+            // Setup original canvas
+            originalCanvas.width = img.width;
+            originalCanvas.height = img.height;
+            origCtx.clearRect(0, 0, img.width, img.height);
+            origCtx.drawImage(img, 0, 0);
+
+            baseImage = img;
+            rebuildBaseTransformed();
+            
+            placeholder.classList.add('hidden');
+            cameraContainer.classList.add('hidden');
+            workspaceContainer.classList.remove('hidden');
+        }
+
+        async function toggleCamera() {
+            if (mediaStream) {
+                closeCamera();
+                return;
+            }
+            
+            placeholder.classList.add('hidden');
+            workspaceContainer.classList.add('hidden');
+            cameraContainer.classList.remove('hidden');
+            cameraBtn.textContent = 'Tutup Kamera';
+            cameraBtn.classList.add('bg-slate-200');
+
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+                cameraStream.srcObject = mediaStream;
+            } catch (err) {
+                alert('Tidak dapat mengakses kamera. Pastikan izin kamera telah diberikan.');
+                closeCamera();
+            }
+        }
+
+        function closeCamera() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            cameraContainer.classList.add('hidden');
+            cameraBtn.textContent = 'Buka Kamera';
+            cameraBtn.classList.remove('bg-slate-200');
+
+            if (!baseImage) {
+                placeholder.classList.remove('hidden');
+            } else {
+                workspaceContainer.classList.remove('hidden');
+            }
+        }
+
+        function capturePhoto() {
+            if (!mediaStream) return;
+            const videoTrack = mediaStream.getVideoTracks()[0];
+            const settings = videoTrack.getSettings();
+            
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = settings.width || cameraStream.videoWidth || 1280;
+            tempCanvas.height = settings.height || cameraStream.videoHeight || 720;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(cameraStream, 0, 0, tempCanvas.width, tempCanvas.height);
+            
+            const img = new Image();
+            img.onload = function() {
+                closeCamera();
+                initImage(img);
+            };
+            img.src = tempCanvas.toDataURL('image/png');
+        }
+
+        function applyFilter(filterType) {
+            currentFilter = filterType;
+            if (baseImage) processImage();
+        }
+
+        function transformImage(action) {
+            if (!baseImage) return;
+            if (action === 'rotate90') {
+                currentTransform.rotation = (currentTransform.rotation + 90) % 360;
+            } else if (action === 'rotate180') {
+                currentTransform.rotation = (currentTransform.rotation + 180) % 360;
+            } else if (action === 'flipH') {
+                currentTransform.flipH = !currentTransform.flipH;
+            } else if (action === 'flipV') {
+                currentTransform.flipV = !currentTransform.flipV;
+            }
+            rebuildBaseTransformed();
+        }
+
+        scaleRange.addEventListener('input', function() {
+            scaleVal.textContent = this.value + '%';
+            currentTransform.scale = parseInt(this.value) / 100;
+            if (baseImage) rebuildBaseTransformed();
+        });
+
+        function rebuildBaseTransformed() {
+            if (!baseImage) return;
+
+            let w = baseImage.width;
+            let h = baseImage.height;
+            let rot = currentTransform.rotation;
+            let scale = currentTransform.scale;
+
+            // Compute dimensions after rotation
+            let targetW = (rot === 90 || rot === 270) ? h : w;
+            let targetH = (rot === 90 || rot === 270) ? w : h;
+
+            // Apply scale
+            targetW = Math.round(targetW * scale);
+            targetH = Math.round(targetH * scale);
+
+            canvas.width = targetW;
+            canvas.height = targetH;
+
+            ctx.save();
+            ctx.clearRect(0, 0, targetW, targetH);
+            
+            // Move to center for rotation & flips
+            ctx.translate(targetW / 2, targetH / 2);
+            ctx.rotate((rot * Math.PI) / 180);
+            
+            if (currentTransform.flipH) ctx.scale(-1, 1);
+            if (currentTransform.flipV) ctx.scale(1, -1);
+
+            let drawW = w * scale;
+            let drawH = h * scale;
+            ctx.drawImage(baseImage, -drawW / 2, -drawH / 2, drawW, drawH);
+            ctx.restore();
+
+            // Save as current working state
+            originalImage = ctx.getImageData(0, 0, targetW, targetH);
+            processImage();
+        }
+
+        // Event listeners for ranges
+        brightnessRange.addEventListener('input', function() {
+            brightnessVal.textContent = this.value;
+            if (originalImage) processImage();
+        });
+
+        contrastRange.addEventListener('input', function() {
+            contrastVal.textContent = this.value;
+            if (originalImage) processImage();
+        });
+
+        thresholdRange.addEventListener('input', function() {
+            thresholdVal.textContent = this.value;
+            if (originalImage) {
+                if (currentFilter === 'threshold') {
+                    processImage();
+                } else {
+                    currentFilter = 'threshold';
+                    processImage();
+                }
+            }
+        });
+
+        function processImage() {
+            if (!originalImage) return;
+
+            // Copy original pixel data
+            let imgData = ctx.createImageData(originalImage);
+            for (let i = 0; i < originalImage.data.length; i++) {
+                imgData.data[i] = originalImage.data[i];
+            }
+
+            let d = imgData.data;
+            let brightness = parseInt(brightnessRange.value);
+            let contrast = parseInt(contrastRange.value);
+            let threshold = parseInt(thresholdRange.value);
+
+            // Apply filter algorithms
+            for (let i = 0; i < d.length; i += 4) {
+                let r = d[i];
+                let g = d[i+1];
+                let b = d[i+2];
+
+                // 1. Base Filter type
+                if (currentFilter === 'grayscale') {
+                    let avg = (r * 0.299 + g * 0.587 + b * 0.114);
+                    d[i] = avg;
+                    d[i+1] = avg;
+                    d[i+2] = avg;
+                } else if (currentFilter === 'bw') {
+                    let avg = (r * 0.299 + g * 0.587 + b * 0.114);
+                    let v = avg >= 128 ? 255 : 0;
+                    d[i] = v;
+                    d[i+1] = v;
+                    d[i+2] = v;
+                } else if (currentFilter === 'threshold') {
+                    let avg = (r * 0.299 + g * 0.587 + b * 0.114);
+                    let v = avg >= threshold ? 255 : 0;
+                    d[i] = v;
+                    d[i+1] = v;
+                    d[i+2] = v;
+                } else if (currentFilter === 'invert') {
+                    d[i] = 255 - r;
+                    d[i+1] = 255 - g;
+                    d[i+2] = 255 - b;
+                } else if (currentFilter === 'sepia') {
+                    d[i]   = (r * 0.393) + (g * 0.769) + (b * 0.189);
+                    d[i+1] = (r * 0.349) + (g * 0.686) + (b * 0.168);
+                    d[i+2] = (r * 0.272) + (g * 0.534) + (b * 0.131);
+                }
+
+                // 2. Brightness & Contrast adjustment
+                if (brightness !== 0) {
+                    d[i] += brightness;
+                    d[i+1] += brightness;
+                    d[i+2] += brightness;
+                }
+
+                if (contrast !== 0) {
+                    let factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+                    d[i] = factor * (d[i] - 128) + 128;
+                    d[i+1] = factor * (d[i+1] - 128) + 128;
+                    d[i+2] = factor * (d[i+2] - 128) + 128;
+                }
+
+                // Clamp values between 0 and 255
+                d[i] = Math.min(255, Math.max(0, d[i]));
+                d[i+1] = Math.min(255, Math.max(0, d[i+1]));
+                d[i+2] = Math.min(255, Math.max(0, d[i+2]));
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+
+            // Special handling for Blur / Bokeh
+            if (currentFilter === 'blur') {
+                ctx.filter = 'blur(6px)';
+                ctx.drawImage(canvas, 0, 0);
+                ctx.filter = 'none';
+            } else if (currentFilter === 'bokeh') {
+                ctx.filter = 'blur(10px)';
+                ctx.drawImage(canvas, 0, 0);
+                ctx.filter = 'none';
+
+                let tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                let tCtx = tempCanvas.getContext('2d');
+                tCtx.putImageData(imgData, 0, 0);
+
+                let centerX = canvas.width / 2;
+                let centerY = canvas.height / 2;
+                let radius = Math.min(canvas.width, canvas.height) * 0.35;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+                ctx.drawImage(tempCanvas, 0, 0);
+                ctx.restore();
+            }
+
+            updateDownloadLink();
+        }
+
+        function resetTransformAndFilters() {
+            currentTransform = { rotation: 0, flipH: false, flipV: false, scale: 1.0 };
+            scaleRange.value = 100;
+            scaleVal.textContent = '100%';
+            brightnessRange.value = 0;
+            contrastRange.value = 0;
+            thresholdRange.value = 128;
+            brightnessVal.textContent = 0;
+            contrastVal.textContent = 0;
+            thresholdVal.textContent = 128;
+            currentFilter = 'normal';
+
+            if (baseImage) {
+                canvas.width = baseImage.width;
+                canvas.height = baseImage.height;
+                ctx.drawImage(baseImage, 0, 0);
+                originalImage = ctx.getImageData(0, 0, baseImage.width, baseImage.height);
+                updateDownloadLink();
+            }
+        }
+
+        function resetImage() {
+            resetTransformAndFilters();
+        }
+
+        function updateDownloadLink() {
+            downloadBtn.href = canvas.toDataURL('image/png');
+        }
+    </script>
+</body>
+</html>
