@@ -1,8 +1,8 @@
 
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "presensi_db",
-  "main": "src/index.js",
+  "name": "cv",
+  "main": "index.js",
   "compatibility_date": "2026-11-12",
   "assets": {
     "directory": "./public",
