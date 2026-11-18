@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "presensi_db",
+  "name": "absen",
   "main": "index.js",
   "compatibility_date": "2026-11-18",
   "assets": {
