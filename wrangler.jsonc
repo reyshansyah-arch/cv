@@ -1,8 +1,14 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "presensi_db",
+  "name": "presensi-db",
   "main": "index.js",
   "compatibility_date": "2026-11-12",
+
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
   "d1_databases": [
     {
       "binding": "DB",
